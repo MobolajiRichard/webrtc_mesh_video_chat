@@ -4,6 +4,8 @@ This is Group video chat application that is built on top the WebTC Mesh Topolog
 
 WebRTC mesh allows multiple browsers to communicate directly with each other by forming a peer to peer network, which allows each browsers to act as both a sender and a receiver of data and can also relay data to other peers in the network.
 
+The client side WebRTC connection is located in the Room.jsx file.
+
 Following are the dependencies of this project:
     "@material-ui/core - For layout,
     "@material-ui/icons" - For icons,

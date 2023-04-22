@@ -4,6 +4,7 @@ import Video from './Video';
 import styled from 'styled-components';
 import { Videocam, VideocamOff, MicOff, Mic, Call} from '@material-ui/icons';
 
+//styling
 const Container = styled.div`
 	height: 100%;
 	color: whitesmoke;
@@ -63,6 +64,8 @@ const UserVideo = styled.video`
 	width: 100%;
 	 height: 100%;
 `
+
+//STUN server for ICE connection
 const pc_config = {
 	iceServers: [
 		// {
@@ -75,6 +78,9 @@ const pc_config = {
 		},
 	],
 };
+
+//signal server url 
+//Must be the same as the port number in the server
 const SOCKET_SERVER_URL = 'http://localhost:8080';
 
 const Room = ({ user, addMember, message, setChat, send, setMessage, setMember }) => {
@@ -102,6 +108,7 @@ const Room = ({ user, addMember, message, setChat, send, setMessage, setMember }
 		}
 	}, []);
 
+	//set up peers connection using the RTCPeerConnection API
 	const createPeerConnection = useCallback((socketID, email) => {
 		try {
 			const pc = new RTCPeerConnection(pc_config);
@@ -150,12 +157,17 @@ const Room = ({ user, addMember, message, setChat, send, setMessage, setMember }
 		}
 	}, []);
 
+	//For storing chats
 	const storeChat = useCallback((data) =>{
 		setChat(data)
 	},[])
 
+	//socket event called in the useEffect, to prevent unneccesary re-renders
 	useEffect(() => {
+		//connect to server
 		socketRef.current = io.connect(SOCKET_SERVER_URL);
+
+		//get local stream
 		getLocalStream();
 
 		socketRef.current.on('all_users', (allUsers) => {
@@ -169,7 +181,6 @@ const Room = ({ user, addMember, message, setChat, send, setMessage, setMember }
 						offerToReceiveAudio: true,
 						offerToReceiveVideo: true,
 					});
-					console.log('create offer success');
 					await pc.setLocalDescription(new RTCSessionDescription(localSdp));
 					socketRef.current.emit('offer', {
 						sdp: localSdp,
@@ -183,18 +194,18 @@ const Room = ({ user, addMember, message, setChat, send, setMessage, setMember }
 			});
 		});
 
+		//Create offer function to initiate the creation of an SDP offer for the purpose
+		//of starting a new WebRTC connection to a remote peer
 		socketRef.current.on(
 			'getOffer',
 			async (data) => {
 				const { sdp, offerSendID, offerSendEmail } = data;
-				console.log('get offer');
 				if (!localStreamRef.current) return;
 				const pc = createPeerConnection(offerSendID, offerSendEmail);
 				if (!(pc && socketRef.current)) return;
 				pcsRef.current = { ...pcsRef.current, [offerSendID]: pc };
 				try {
 					await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-					console.log('answer set remote description success');
 					const localSdp = await pc.createAnswer({
 						offerToReceiveVideo: true,
 						offerToReceiveAudio: true,
@@ -211,6 +222,8 @@ const Room = ({ user, addMember, message, setChat, send, setMessage, setMember }
 			},
 		);
 
+		//function to create an SDP answer from an offer
+		//received from the remote peer during webRTC connection.
 		socketRef.current.on(
 			'getAnswer',
 			(data) => {
@@ -222,25 +235,22 @@ const Room = ({ user, addMember, message, setChat, send, setMessage, setMember }
 			},
 		);
 
-		
-
+		//Add new candidate
 		socketRef.current.on(
 			'getCandidate',
 			async (data) => {
-				console.log('get candidate');
 				const pc = pcsRef.current[data.candidateSendID];
 				if (!pc) return;
 				await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-				console.log('candidate add success');
 			},
 		);
-
+		
+		//receive and store all clients messages
 		socketRef.current.on('addMessages', (data)=>{
 			storeChat(data)
-			console.log('chatdata reeceived')
 		})
 
-
+		//remove client data after ending calls
 		socketRef.current.on('user_exit', (data) => {
 			if (!pcsRef.current[data.id]) return;
 			pcsRef.current[data.id].close();
@@ -259,14 +269,13 @@ const Room = ({ user, addMember, message, setChat, send, setMessage, setMember }
 			});
 		};
 
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [createPeerConnection, getLocalStream, storeChat]);
 
 	useEffect(() => {
 		addMember(users)
 	}, [users])
 
-	//send message to other peers
+	//send chat message to other peers
 	useEffect(() => {
 		if(send > 0){
 			socketRef.current.emit('sendMessage', {room:user.room, message:message})
@@ -303,10 +312,6 @@ const Room = ({ user, addMember, message, setChat, send, setMessage, setMember }
 	const leaveCall = () =>{
 		window.location.href = '/'
 	}
-
-
-	console.log({users})
-
 
 	return (
 		<Container>
