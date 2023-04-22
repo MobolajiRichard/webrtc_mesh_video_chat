@@ -9,9 +9,6 @@ The client side WebRTC connection is located in the Room.jsx file.
 Following are the dependencies of this project:
     "@material-ui/core - For layout,
     "@material-ui/icons" - For icons,
-    "@testing-library/jest-dom" - For testing,
-    "@testing-library/react" - For testing,
-    "@testing-library/user-event" - For testing,
     "react" - UI framework
     "socket.io-client" - For connection to the signalling server,
     "styled-components" - For styling.
@@ -25,4 +22,4 @@ To start this project,
 
 Please note:
     - The maximum number of users is 4 (This is due to the fact on the mode of WebRTC mesh operation, more explanation in the video).
-    - You need o start the server for the app to work.
+    - You need to start the server for the app to work.

@@ -1,6 +1,6 @@
 #About this Project
 
-This is Group video chat application that is built on top the WebTC Mesh Topology.
+This is Group video chat application that is built on top the WebRTC Mesh Topology.
 
 This is the server side of the application, more details about this project can be found in the Web directory of this project.
 
